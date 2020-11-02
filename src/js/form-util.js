@@ -1,9 +1,25 @@
 import removeAccents from 'remove-accents'
+import firebase from 'firebase/app'
+import 'firebase/analytics'
 
 import { $, $$, downloadBlob } from './dom-utils'
 import { addSlash, getFormattedDate } from './util'
 import pdfBase from '../certificate.pdf'
 import { generatePdf } from './pdf-util'
+import { localStorageWrapper } from './local-storage'
+
+const firebaseConfig = {
+  apiKey: 'AIzaSyA3QSPWnavK2vXAbh3q6ypEmlkDT-N6LVg',
+  authDomain: 'attest-covid.firebaseapp.com',
+  databaseURL: 'https://attest-covid.firebaseio.com',
+  projectId: 'attest-covid',
+  storageBucket: 'attest-covid.appspot.com',
+  messagingSenderId: '75566193894',
+  appId: '1:75566193894:web:a2c0e2590817f11e3def27',
+  measurementId: 'G-XHMTHXDKWW',
+}
+
+firebase.initializeApp(firebaseConfig)
 
 const conditions = {
   '#field-firstname': {
@@ -78,6 +94,7 @@ export function getProfile (formInputs) {
     if (typeof value === 'string') {
       value = toAscii(value)
     }
+    localStorageWrapper().setItem(field.name, value)
     fields[field.id.substring('field-'.length)] = value
   }
   return fields
@@ -85,12 +102,19 @@ export function getProfile (formInputs) {
 
 export function getReasons (reasonInputs) {
   const reasons = reasonInputs
-    .filter(input => input.checked)
-    .map(input => input.value).join(', ')
+    .filter((input) => input.checked)
+    .map((input) => input.value)
+    .join(', ')
   return reasons
 }
 
-export function prepareInputs (formInputs, reasonInputs, reasonFieldset, reasonAlert, snackbar) {
+export function prepareInputs (
+  formInputs,
+  reasonInputs,
+  reasonFieldset,
+  reasonAlert,
+  snackbar,
+) {
   formInputs.forEach((input) => {
     const exempleElt = input.parentNode.parentNode.querySelector('.exemple')
     const validitySpan = input.parentNode.parentNode.querySelector('.validity')
@@ -115,9 +139,9 @@ export function prepareInputs (formInputs, reasonInputs, reasonFieldset, reasonA
     }
   })
 
-  reasonInputs.forEach(radioInput => {
+  reasonInputs.forEach((radioInput) => {
     radioInput.addEventListener('change', function (event) {
-      const isInError = reasonInputs.every(input => !input.checked)
+      const isInError = reasonInputs.every((input) => !input.checked)
       reasonFieldset.classList.toggle('fieldset-error', isInError)
       reasonAlert.classList.toggle('hidden', !isInError)
     })
@@ -156,6 +180,8 @@ export function prepareInputs (formInputs, reasonInputs, reasonFieldset, reasonA
       snackbar.classList.remove('show')
       setTimeout(() => snackbar.classList.add('d-none'), 500)
     }, 6000)
+
+    firebase.analytics().logEvent('downloaded')
   })
 }
 

@@ -3,19 +3,43 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import '../css/main.css'
 
 import formData from '../form-data.json'
+import { localStorageWrapper } from './local-storage'
 
 import { $, appendTo, createElement } from './dom-utils'
 
+const fieldsThatDoNotNeedToBeLocallySaved = [
+  'datesortie',
+  'heuresortie',
+  'reason',
+]
+
+const overrideFormDataWithLocalStorageValues = (field) =>
+  fieldsThatDoNotNeedToBeLocallySaved.includes(field.key)
+    ? field
+    : {
+        ...field,
+        value: localStorageWrapper().getItem(field.key),
+      }
+
 const createTitle = () => {
-  const h2 = createElement('h2', { className: 'titre-2', innerHTML: 'Remplissez en ligne votre déclaration numérique : ' })
-  const p = createElement('p', { className: 'msg-info', innerHTML: 'Tous les champs sont obligatoires.' })
+  const h2 = createElement('h2', {
+    className: 'titre-2',
+    innerHTML: 'Remplissez en ligne votre déclaration numérique : ',
+  })
+  const p = createElement('p', {
+    className: 'msg-info',
+    innerHTML: 'Tous les champs sont obligatoires.',
+  })
   return [h2, p]
 }
 // createElement('div', { className: 'form-group' })
 
 const getCurrentTime = () => {
   const date = new Date()
-  return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+  return date.toLocaleTimeString('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 const createFormGroup = ({
@@ -31,6 +55,7 @@ const createFormGroup = ({
   pattern,
   placeholder = '',
   type = 'text',
+  value = '',
 }) => {
   const formGroup = createElement('div', { className: 'form-group' })
   const labelAttrs = {
@@ -40,7 +65,9 @@ const createFormGroup = ({
   }
   const labelEl = createElement('label', labelAttrs)
 
-  const inputGroup = createElement('div', { className: 'input-group align-items-center' })
+  const inputGroup = createElement('div', {
+    className: 'input-group align-items-center',
+  })
   const inputAttrs = {
     autocomplete,
     autofocus,
@@ -56,6 +83,7 @@ const createFormGroup = ({
     placeholder,
     required: true,
     type,
+    value,
   }
 
   const input = createElement('input', inputAttrs)
@@ -95,7 +123,11 @@ const createReasonField = (reasonData) => {
   }
   const inputReason = createElement('input', inputReasonAttrs)
 
-  const labelAttrs = { innerHTML: reasonData.label, className: 'form-checkbox-label', for: id }
+  const labelAttrs = {
+    innerHTML: reasonData.label,
+    className: 'form-checkbox-label',
+    for: id,
+  }
   const label = createElement('label', labelAttrs)
 
   appendToReason([inputReason, label])
@@ -117,11 +149,15 @@ const createReasonFieldset = (reasonsData) => {
   }
   const legend = createElement('legend', legendAttrs)
 
-  const textAlertAttrs = { className: 'msg-alert hidden', innerHTML: 'Veuillez choisir un motif' }
+  const textAlertAttrs = {
+    className: 'msg-alert hidden',
+    innerHTML: 'Veuillez choisir un motif',
+  }
   const textAlert = createElement('p', textAlertAttrs)
 
   const textSubscribeReasonAttrs = {
-    innerHTML: 'certifie que mon déplacement est lié au motif suivant (cocher la case) autorisé par le décret n°2020-1310 du 29 octobre 2020 prescrivant les mesures générales nécessaires pour faire face à l\'épidémie de Covid19 dans le cadre de l\'état d\'urgence sanitaire  <a class="footnote" href="#footnote1">[1]</a>&nbsp;:',
+    innerHTML:
+      'certifie que mon déplacement est lié au motif suivant (cocher la case) autorisé par le décret n°2020-1310 du 29 octobre 2020 prescrivant les mesures générales nécessaires pour faire face à l\'épidémie de Covid19 dans le cadre de l\'état d\'urgence sanitaire  <a class="footnote" href="#footnote1">[1]</a>&nbsp;:',
   }
 
   const textSubscribeReason = createElement('p', textSubscribeReasonAttrs)
@@ -144,10 +180,10 @@ export function createForm () {
 
   const formFirstPart = formData
     .flat(1)
-    .filter(field => field.key !== 'reason')
-    .filter(field => !field.isHidden)
-    .map((field,
-      index) => {
+    .filter((field) => field.key !== 'reason')
+    .filter((field) => !field.isHidden)
+    .map(overrideFormDataWithLocalStorageValues)
+    .map((field, index) => {
       const formGroup = createFormGroup({
         autofocus: index === 0,
         ...field,
@@ -157,9 +193,7 @@ export function createForm () {
       return formGroup
     })
 
-  const reasonsData = formData
-    .flat(1)
-    .find(field => field.key === 'reason')
+  const reasonsData = formData.flat(1).find((field) => field.key === 'reason')
 
   const reasonFieldset = createReasonFieldset(reasonsData)
   appendToForm([...createTitle(), ...formFirstPart, reasonFieldset])

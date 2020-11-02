@@ -24,13 +24,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lab-mi/attestation-deplacement-derogatoire-q4-2020"
+    "url": "git+https://github.com/PCreations/attestation-deplacement-derogatoire-q4-2020.git"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/lab-mi/attestation-deplacement-derogatoire-q4-2020/issues"
+    "url": "https://github.com/PCreations/attestation-deplacement-derogatoire-q4-2020.git/issues"
   },
   "devDependencies": {
     "@babel/core": "^7.12.3",
@@ -61,6 +61,7 @@
     "@fortawesome/fontawesome-svg-core": "^1.2.32",
     "@fortawesome/free-solid-svg-icons": "^5.15.1",
     "bootstrap": "^4.5.3",
+    "firebase": "^8.0.0",
     "pdf-lib": "^1.11.2",
     "qrcode": "^1.4.4",
     "remove-accents": "^0.4.2"
