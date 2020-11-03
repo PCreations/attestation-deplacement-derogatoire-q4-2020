@@ -3,7 +3,7 @@ import firebase from 'firebase/app'
 import 'firebase/analytics'
 
 import { $, $$, downloadBlob } from './dom-utils'
-import { addSlash, getFormattedDate } from './util'
+import { getFormattedDate } from './util'
 import pdfBase from '../certificate.pdf'
 import { generatePdf } from './pdf-util'
 import { localStorageWrapper } from './local-storage'
@@ -29,7 +29,7 @@ const conditions = {
     length: 1,
   },
   '#field-birthday': {
-    pattern: /^([0][1-9]|[1-2][0-9]|30|31)\/([0][1-9]|10|11|12)\/(19[0-9][0-9]|20[0-1][0-9]|2020)/g,
+    pattern: /\d{4}-\d{2}-\d{2}/g,
   },
   '#field-placeofbirth': {
     length: 1,
@@ -51,7 +51,7 @@ const conditions = {
   },
 }
 
-function validateAriaFields () {
+function validateAriaFields() {
   return Object.keys(conditions)
     .map((field) => {
       const fieldData = conditions[field]
@@ -71,11 +71,11 @@ function validateAriaFields () {
     .includes(true)
 }
 
-export function setReleaseDateTime (releaseDateInput) {
+export function setDateTime(dateInput) {
   const loadedDate = new Date()
-  releaseDateInput.value = getFormattedDate(loadedDate)
+  dateInput.value = getFormattedDate(loadedDate)
 }
-export function toAscii (string) {
+export function toAscii(string) {
   if (typeof string !== 'string') {
     throw new Error('Need string')
   }
@@ -83,13 +83,13 @@ export function toAscii (string) {
   const asciiString = accentsRemoved.replace(/[^\x00-\x7F]/g, '') // eslint-disable-line no-control-regex
   return asciiString
 }
-export function getProfile (formInputs) {
+export function getProfile(formInputs) {
   const fields = {}
   for (const field of formInputs) {
     let value = field.value
-    if (field.id === 'field-datesortie') {
-      const dateSortie = field.value.split('-')
-      value = `${dateSortie[2]}/${dateSortie[1]}/${dateSortie[0]}`
+    if (field.type === 'date') {
+      const date = field.value.split('-')
+      value = `${date[2]}/${date[1]}/${date[0]}`
     }
     if (typeof value === 'string') {
       value = toAscii(value)
@@ -100,7 +100,7 @@ export function getProfile (formInputs) {
   return fields
 }
 
-export function getReasons (reasonInputs) {
+export function getReasons(reasonInputs) {
   const reasons = reasonInputs
     .filter((input) => input.checked)
     .map((input) => input.value)
@@ -108,12 +108,12 @@ export function getReasons (reasonInputs) {
   return reasons
 }
 
-export function prepareInputs (
+export function prepareInputs(
   formInputs,
   reasonInputs,
   reasonFieldset,
   reasonAlert,
-  snackbar,
+  snackbar
 ) {
   formInputs.forEach((input) => {
     const exempleElt = input.parentNode.parentNode.querySelector('.exemple')
@@ -127,15 +127,6 @@ export function prepareInputs (
           exempleElt.innerHTML = ''
         }
       })
-    }
-  })
-
-  $('#field-birthday').addEventListener('keyup', function (event) {
-    event.preventDefault()
-    const input = event.target
-    const key = event.keyCode || event.charCode
-    if (key !== 8 && key !== 46) {
-      input.value = addSlash(input.value)
     }
   })
 
@@ -185,13 +176,15 @@ export function prepareInputs (
   })
 }
 
-export function prepareForm () {
+export function prepareForm() {
   const formInputs = $$('#form-profile input')
   const snackbar = $('#snackbar')
   const reasonInputs = [...$$('input[name="field-reason"]')]
   const reasonFieldset = $('#reason-fieldset')
   const reasonAlert = reasonFieldset.querySelector('.msg-alert')
   const releaseDateInput = $('#field-datesortie')
-  setReleaseDateTime(releaseDateInput)
+  const birthdayDateInput = $('#field-birthday')
+  setDateTime(releaseDateInput)
+  setDateTime(birthdayDateInput)
   prepareInputs(formInputs, reasonInputs, reasonFieldset, reasonAlert, snackbar)
 }
